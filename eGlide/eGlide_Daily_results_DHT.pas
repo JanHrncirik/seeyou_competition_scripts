@@ -8,7 +8,7 @@ const
   RefVoltage = 110;   // Fallback if nothing else is known about voltage used when engine is running
   RefCurrent = 200;   // Fallback if nothing is known about current consumption
   RefPower = 120*280; // Fallback when only ENL is available (Antares in case of E2Glide 2020)
-  FreeAllowance = 2000; // Watt-hours. No penalty if less power was consumed
+  FreeAllowance = 20000; // Watt-hours. No penalty if less power was consumed
   EnginePenaltyPerSec = 1;    // Penalty in seconds per Watt-hour consumed over Free Allowance. 1000 Wh of energy allows you to cruise for 15 minutes.
 
 var
@@ -16,7 +16,7 @@ var
   Dm, D1,
   Dt, n1, n2, n3, n4, N, D0, Vo, T0, Tm,
   Pm, Pdm, Pvm, Pn, F, Fcr, Day: Double;
-  D, H, Dh, M, T, Tmin, Tmax, Tcutoff, MaxDelay, Dc, Pd, V, Vh, Pv, S, R_hcap, PilotDis : double;
+  D, H, Dh, M, T, Tmin, Tmax, Tcutoff, MaxDelay, MaxDelayNonFinisher, Dc, Pd, V, Vh, Pv, S, R_hcap, PilotDis : double;
   PmaxDistance, PmaxTime, PilotEnergyConsumption, CurrentPower, PilotEngineTime, EnginePenalty, ScoringFinish  : double;
   i,j, minIdx : integer;
   str : String;
@@ -371,6 +371,7 @@ begin
     end;
   end;
   MaxDelay := 0.2 * T0 * n3/N;
+  MaxDelayNonFinisher := 0.2 * T0 * n3/N + 1/N * T0;
 
 
   //! Debug output
@@ -379,7 +380,7 @@ begin
   Info4 := Info4 + '; N = ' + FormatFloat('0',N);
   Info4 := Info4 + '; n3 = ' + FormatFloat('0',n3);
   Info4 := Info4 + '; Tcutoff = ' + FormatFloat('0',Tcutoff);
-  Info4 := Info4 + '; MaxDelay = ' + FormatFloat('0',MaxDelay);
+  Info4 := Info4 + '; Max Finisher = ' + FormatFloat('0',MaxDelay)+ '; Max Non-Finisher = ' + FormatFloat('0',MaxDelayNonFinisher);
 
   
   // ELAPSED TIME SCORING
@@ -395,17 +396,20 @@ begin
         EnginePenalty := (PilotEnergyConsumption - FreeAllowance) * EnginePenaltyPerSec / 60; // Penalty in minutes
         Pilots[i].Points := Pilots[i].Points - EnginePenalty;
       end;
+    end;
+
+    if (Pilots[i].finish > 0) Then
+	begin
+      //Worst score a pilot can get is 1.2 times the last finisher's time.
+      if Pilots[i].Points < (( -1 * MaxDelay )/60) Then
+        Pilots[i].Points := -1 * MaxDelay / 60;
     end
     else
     begin
-      // Non-finishers get a maximum time difference for a day
-      Pilots[i].Points := -1* MaxDelay / 60;
-    end;
-
-    //Worst score a pilot can get is 1.2 times the last finisher's time.
-    if Pilots[i].Points < (( -1 * MaxDelay )/60) Then
-      Pilots[i].Points := -1 * MaxDelay / 60;
-      
+      Pilots[i].Points := ( -1 * MaxDelayNonFinisher ) / 60;
+    end;	
+	
+	// Apply penalties
     Pilots[i].Points := Round((Pilots[i].Points - Pilots[i].Penalty/60)*100)/100; // Expected penalty is in seconds
   end;
     
