@@ -146,21 +146,6 @@ begin
     ReadDayTagParameter := default;            // string not found
 end;
 
-// distance using FAI Sphere of 6371km
-Function CalcDistance(lat1 : double; long1 : double; lat2 : double; long2 : double) : double;
-var
-  x : double;
-
-const
-  R = 6371;
-
-begin
-// check with PI need to turn these into radians
-  //x := (sin(lat1) * sin(lat2)) + (cos(lat1) * cos(lat2) * cos(long1 - long2))
-  //if (x > 0) then  CalcDistance := R * acos(x) else CalcDistance := 0;
-  CalcDistance := 0;
-end;
-
 //  Main Code
 begin
 
