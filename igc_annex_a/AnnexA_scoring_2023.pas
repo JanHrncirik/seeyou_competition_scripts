@@ -7,7 +7,7 @@ Program IGC_Annex_A_scoring_WGC2023v2_015;
 //       . Support for 7.4.5b Starting Procedures - Pre-start altitude
 //       . enter "PreStartAlt=nnn" in DayTag where nnn is altitude in m
 //   . crappy hash function for handicaps for appropriate classes displayed in results info. 
-//   . User warning for below minimum height above airfield elevation.
+//   . User warning for below minimum height above airfield elevation - copy Ian's from Australia Rules
 //   . fix calculation of n3 to only count actual finishers.
 //   . include newline between user warnings to improve readability
 //
@@ -92,8 +92,9 @@ var
   PreStartLimitOK : boolean;
 
   //below altitude on task
-  AirfieldLat, AirfieldLong, AirfieldDist, MinimumAlt: Double;
-  BelowMinimumAltFound : boolean;
+  BelowAltFound : boolean;
+  FixDuration, LaunchAboveAltFix, LastFixTime, FGAboveAltFix, LowPointTsec : Integer;
+  MinimumAlt, LowPoint : Double;
 
 Function MinValue( a,b,c : double ) : double;
 var m : double;
@@ -529,7 +530,7 @@ begin
   // handicap crappy hash
 
 
-  // less than altitude 
+  // altitude less than minimum altitude
   MinimumAlt := Trunc(ReadDayTagParameter('MINIMUMALT',0));	
 
   if (MinimumAlt <> 0 )  then
@@ -538,22 +539,71 @@ begin
     
     for i:=0 to GetArrayLength(Pilots)-1 do
     begin
-      // walk through all points to find point < minimum alt and > distance from Airfield Ref)
-      j := 0;
-      BelowMinimumAltFound := FALSE;
-      NbrFixes := GetArrayLength(Pilots[i].Fixes) -1;
-      while (j < NbrFixes) and (not(BelowMinimumAltFound)) do begin
-				  if (Pilots[i].Fixes[j].AltQnh < MinimumAlt) then 
+      // walk through until above minimum altitude for > 60 seconds on initial launch
+
+        NbrFixes := GetArrayLength(Pilots[i].Fixes);
+        j:=0;
+        FixDuration := 0;
+        if (j < NbrFixes - 1) then LastFixTime := Pilots[i].Fixes[j].Tsec;
+        while ((j < NbrFixes - 1) and (FixDuration < 60)) do 
+        begin
+          if (Pilots[i].Fixes[j].AltQnh >= MinimumAlt) then
           begin
-            if (CalcDistance(Pilots[i].Fixes[j].lat,Pilots[i].Fixes[j].long,AirfieldLat,AirfieldLong) > AirfieldDist) then 
-            begin
-              BelowMinimumAltFound:=TRUE
-              if Pilots[i].Warning <> '' then Pilots[i].Warning := Pilots[i].Warning + #10;
-              Pilots[i].warning := Pilots[i].warning + 'Below Minimum Alt: ' + IntToStr(MinimumAlt) + 'm at time '  + GetTimestring(Pilots[i].Fixes[j].TSec);
-            end;
+            FixDuration := FixDuration + (Pilots[i].Fixes[j].Tsec - LastFixTime); 
+          end
+          else begin
+            FixDuration := 0;
           end;
-          j := J + 1;
-			end;
+          LastFixTime := Pilots[i].Fixes[j].Tsec;
+          j := j + 1;
+        end;
+
+        LaunchAboveAltFix := j;
+
+         // walk backward through until above minimum altitude for > 60 seconds on final glide
+        j:=NbrFixes - 1;
+        FixDuration := 0;
+        if (j < NbrFixes - 1) then LastFixTime := Pilots[i].Fixes[j].Tsec;
+        while ((j < LaunchAboveAltFix) and (FixDuration < 60)) do 
+        begin
+          if (Pilots[i].Fixes[j].AltQnh >= MinimumAlt) then
+          begin
+            FixDuration := FixDuration + (LastFixTime - Pilots[i].Fixes[j].Tsec ); 
+          end
+          else begin
+            FixDuration := 0;
+          end;
+          LastFixTime := Pilots[i].Fixes[j].Tsec;
+          j := j - 1;
+        end;
+
+        FGAboveAltFix := j;
+
+        // check between LaunchAboveAltFix to FGAboveAltFix to find points below 
+
+        j := LaunchAboveAltFix;
+
+        LowPoint := Pilots[i].Fixes[LaunchAboveAltFix].AltQnh;
+        BelowAltFound := FALSE;
+
+        while (j < FGAboveAltFix) or (BelowAltFound) do
+        begin
+          if (Pilots[i].Fixes[j].AltQnh < LowPoint) then 
+          begin
+            LowPoint := Pilots[i].Fixes[j].AltQnh;
+            LowPointTsec := Pilots[i].Fixes[j].Tsec;
+          end;
+          if (Pilots[i].Fixes[j].AltQnh < MinimumAlt) then BelowAltFound := TRUE; 
+          j := j+1;
+        end;
+
+        if (BelowAltFound) then 
+        begin
+          if Pilots[i].Warning <> '' then Pilots[i].Warning := Pilots[i].Warning + #10;
+          Pilots[i].warning := Pilots[i].warning + 'First Below Minimum Alt: ' + FloatToStr(LowPoint) ;
+          Pilots[i].warning := Pilots[i].warning + 'm at time: '  + GetTimestring(LowPointTsec);
+        end;
+
     end;  
 
     // 
