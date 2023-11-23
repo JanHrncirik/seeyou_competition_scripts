@@ -1,4 +1,4 @@
-Program IGC_Annex_A_scoring_WGC2023v2_016;
+Program IGC_Annex_A_scoring_WGC2023v2_018;
 // Collaborate on writing scripts at Github:
 // https://github.com/naviter/seeyou_competition_scripts/
 //
@@ -535,12 +535,11 @@ begin
 
   if (MinimumAlt <> 0 )  then
   begin
-    showmessage('start minimum alt')
+    showmessage('start minimum alt.  MinAlt=' + FloatToStr(MinimumAlt));
     
     for i:=0 to GetArrayLength(Pilots)-1 do
     begin
       // walk through until above minimum altitude for > 60 seconds on initial launch
-
         NbrFixes := GetArrayLength(Pilots[i].Fixes);
         j:=0;
         FixDuration := 0;
@@ -559,6 +558,7 @@ begin
         end;
 
         LaunchAboveAltFix := j;
+        showmessage('pilot:' + IntToStr(i) + ' LaunchAboveAltFix = ' + IntToStr(LaunchAboveAltFix));
 
          // walk backward through until above minimum altitude for > 60 seconds on final glide
         j:=NbrFixes - 1;
@@ -578,14 +578,14 @@ begin
         end;
 
         FGAboveAltFix := j;
-
+        showmessage('pilot:' + IntToStr(i) + ' FGAboveAltFix = ' + IntToStr(FGAboveAltFix));
         // check between LaunchAboveAltFix to FGAboveAltFix to find points below 
 
         j := LaunchAboveAltFix;
 
         LowPoint := Pilots[i].Fixes[LaunchAboveAltFix].AltQnh;
         BelowAltFound := FALSE;
-
+        showmessage('pilot:' + IntToStr(i) + ' InitialLowPoint = ' + FloatToStr(LowPoint));
         while (j < FGAboveAltFix) or (BelowAltFound) do
         begin
           if (Pilots[i].Fixes[j].AltQnh < LowPoint) then 
@@ -603,6 +603,7 @@ begin
           Pilots[i].warning := Pilots[i].warning + 'First Below Minimum Alt: ' + FloatToStr(LowPoint) ;
           Pilots[i].warning := Pilots[i].warning + 'm at time: '  + GetTimestring(LowPointTsec);
         end;
+        showmessage('pilot:' + IntToStr(i) + ' LowPoint = ' + FloatToStr(LowPoint));
 
     end;  
 
