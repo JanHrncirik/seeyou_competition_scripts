@@ -1,4 +1,4 @@
-Program IGC_Annex_A_scoring_WGC2023v2_018;
+Program IGC_Annex_A_scoring_WGC2023v2_025;
 // Collaborate on writing scripts at Github:
 // https://github.com/naviter/seeyou_competition_scripts/
 //
@@ -564,7 +564,7 @@ begin
         j:=NbrFixes - 1;
         FixDuration := 0;
         if (j < NbrFixes - 1) then LastFixTime := Pilots[i].Fixes[j].Tsec;
-        while ((j < LaunchAboveAltFix) and (FixDuration < 60)) do 
+        while ((j > LaunchAboveAltFix) and (FixDuration < 60)) do 
         begin
           if (Pilots[i].Fixes[j].AltQnh >= MinimumAlt) then
           begin
@@ -583,11 +583,18 @@ begin
 
         j := LaunchAboveAltFix;
 
-        LowPoint := Pilots[i].Fixes[LaunchAboveAltFix].AltQnh;
+        LowPoint := Pilots[i].Fixes[j].AltQnh;
         BelowAltFound := FALSE;
         showmessage('pilot:' + IntToStr(i) + ' InitialLowPoint = ' + FloatToStr(LowPoint));
-        while (j < FGAboveAltFix) or (BelowAltFound) do
+        while ((j < FGAboveAltFix - 1) and Not(BelowAltFound)) do
         begin
+          // showmessage('i:' + inttostr(i));
+          // showmessage('j:' + inttostr(j));
+          // showmessage('altqnh:' + floattostr(Pilots[i].Fixes[j].AltQnh));
+          // showmessage('lowpoint:' + floattostr(LowPoint));
+          
+          if (j <= 0) or (j >=  NbrFixes - 2 ) then showmessage('pilot:' + IntToStr(i) +' bad j:' + inttostr(j) + ' LaunchAboveAltFix = ' + IntToStr(LaunchAboveAltFix) + ' FGAboveAltFix = ' + IntToStr(FGAboveAltFix) + ' NbrFixes' + IntToStr(NbrFixes));
+
           if (Pilots[i].Fixes[j].AltQnh < LowPoint) then 
           begin
             LowPoint := Pilots[i].Fixes[j].AltQnh;
