@@ -1,4 +1,4 @@
-Program IGC_Annex_A_scoring_WGC2023v2_015;
+Program IGC_Annex_A_scoring_WGC2023v2_016;
 // Collaborate on writing scripts at Github:
 // https://github.com/naviter/seeyou_competition_scripts/
 //
