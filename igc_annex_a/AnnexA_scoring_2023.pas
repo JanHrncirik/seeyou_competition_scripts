@@ -1,4 +1,4 @@
-Program IGC_Annex_A_scoring_WGC2023v2_028;
+Program IGC_Annex_A_scoring_WGC2023v2_034;
 // Collaborate on writing scripts at Github:
 // https://github.com/naviter/seeyou_competition_scripts/
 //
@@ -6,7 +6,7 @@ Program IGC_Annex_A_scoring_WGC2023v2_028;
 //   . Incorporate changes required for Annex A 2023 Edition and WGC 2023 Local Procedures
 //       . Support for 7.4.5b Starting Procedures - Pre-start altitude
 //       . enter "PreStartAlt=nnn" in DayTag where nnn is altitude in m
-//   . crappy hash function for handicaps for appropriate classes displayed in results info. 
+//   . Checksum function for handicaps for appropriate classes displayed in results info. 
 //   . User warning for below minimum height above airfield elevation - copy Ian's from Australia Rules
 //   . fix calculation of n3 to only count actual finishers.
 //   . include newline between user warnings to improve readability
@@ -63,6 +63,7 @@ Program IGC_Annex_A_scoring_WGC2023v2_028;
 
 const UseHandicaps = 2;   // set to: 0 to disable handicapping, 1 to use handicaps, 2 is auto (handicaps only for club and multi-seat)
       PevStartTimeBuffer = 30; // PEV which is less than PevStartTimeBuffer seconds later than last PEV will be ignored and not counted
+      ModPrime = 65521;  // used for handicap checksum
    
 var
   Dm, D1,
@@ -95,6 +96,11 @@ var
   BelowAltFound : boolean;
   FixDuration, LaunchAboveAltFix, LastFixTime, FGAboveAltFix, LowPointTsec : Integer;
   MinimumAlt, LowPoint : Double;
+
+  //Checksum function for handicapped classes
+  AVal, BVal : double;
+  Word1, Word2 : string;
+
 
 Function MinValue( a,b,c : double ) : double;
 var m : double;
@@ -535,7 +541,21 @@ begin
     end;
   end;
 
-  // handicap crappy hash
+  // simple handicap Checksum - adler32
+  if Auto_Hcaps_on = true then
+  begin
+    AVal := 1;
+    BVal := 0;
+    for i:=0 to GetArrayLength(Pilots)-1 do
+      AVal := AVal + Pilots[i].Hcap * 10000;
+      BVal := BVal + AVal;
+    end;
+    AVal := AVal mod ModPrime;
+    BVal := BVal mod ModPrime;
+    Word1 := DEC2HEX(round(BVal));
+    Word2 := DEC2HEX(round(AVal));
+    Info4 := Info4 + ', ' + Task.ClassID + ' HCAP=' + Word1 + Word2;
+  end;
 
   // altitude less than minimum altitude
   if (MinimumAlt <> 0 )  then
