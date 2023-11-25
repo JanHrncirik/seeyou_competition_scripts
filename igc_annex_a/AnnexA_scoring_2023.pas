@@ -1,4 +1,4 @@
-Program IGC_Annex_A_scoring_WGC2023v2_034;
+Program IGC_Annex_A_scoring_WGC2023v2_049;
 // Collaborate on writing scripts at Github:
 // https://github.com/naviter/seeyou_competition_scripts/
 //
@@ -99,8 +99,68 @@ var
 
   //Checksum function for handicapped classes
   AVal, BVal : double;
-  Word1, Word2 : string;
+ 
 
+Function Int2HexDigit(FourBitInt : integer) : string;
+begin
+  showmessage('starting int2hexdigit');
+  if FourBitInt < 10 then Int2HexDigit := IntToStr(FourBitInt);
+  if FourBitInt = 10 then Int2HexDigit = 'A';
+  if FourBitInt = 11 then Int2HexDigit = 'B';
+  if FourBitInt = 12 then Int2HexDigit = 'C';
+  if FourBitInt = 13 then Int2HexDigit = 'D';
+  if FourBitInt = 14 then Int2HexDigit = 'E';
+  if FourBitInt = 15 then Int2HexDigit = 'F';
+  showmessage('converted ' + inttostr(FourBitInt));
+end;
+
+Function Int2Hex(input : double) : string;
+var
+Target: double;
+OutputValue : string;
+begin
+    
+    showmessage('1-' + floattostr(input));
+    Target := input / 268435456;
+    OutputValue := Int2HexDigit(round(Target));
+    Target := (Target - round(Target)) * 268435456;
+
+    showmessage('2');
+    Target := Target / 16777216;
+    OutputValue := OutputValue + Int2Hex(round(Target));
+    Target := (Target - round(Target)) * 16777216;
+
+    showmessage('3');
+    Target := Target / 1048576;
+    OutputValue := OutputValue + Int2Hex(round(Target));
+    Target := (Target - round(Target)) * 1048576;
+
+    showmessage('4');
+    Target := Target / 65536;
+    OutputValue := OutputValue + Int2Hex(round(Target));
+    Target := (Target - round(Target)) * 65536;
+    
+    showmessage('5');
+    Target := Target / 4096;
+    OutputValue := OutputValue + Int2Hex(round(Target));
+    Target := (Target - round(Target)) * 4096;
+    
+    showmessage('6');
+    Target := Target / 256;
+    OutputValue := OutputValue + Int2Hex(round(Target));
+    Target := (Target - round(Target)) * 256;
+
+    showmessage('7');
+    Target := Target / 16;
+    OutputValue := OutputValue + Int2Hex(round(Target));
+    Target := (Target - round(Target)) * 16;
+
+    showmessage('8');
+    OutputValue := OutputValue + Int2Hex(round(Target));
+
+    Int2Hex := OutputValue;
+    
+end;
 
 Function MinValue( a,b,c : double ) : double;
 var m : double;
@@ -508,34 +568,37 @@ begin
         j := 0;
         NbrFixes := GetArrayLength(Pilots[i].Fixes)-1;
         //skip through to start gate open
-        while (Pilots[i].Fixes[j].TSec < Task.NoStartBeforeTime) and (j < NbrFixes) do 
+        if NbrFixes > 0 then
         begin
-				  j := J + 1;
-			  end;
-        //now check for lowest altitude from start gate open to start
-        if j <= NbrFixes then 
-        begin
-          MinPreStartAlt := Pilots[i].Fixes[j].AltQnh;
-          MinPreStartAltTime := Pilots[i].Fixes[j].TSec;
-        end;
-        while (Pilots[i].Fixes[j].TSec <= Pilots[i].start) and (j < NbrFixes) and not(PreStartLimitOK) do 
-        begin
-          if Pilots[i].Fixes[j].AltQnh < MinPreStartAlt then 
+          while  (j < NbrFixes) and (Pilots[i].Fixes[j].TSec < Task.NoStartBeforeTime) do 
+          begin
+            j := J + 1;
+          end;
+          //now check for lowest altitude from start gate open to start
+          if j <= NbrFixes then 
           begin
             MinPreStartAlt := Pilots[i].Fixes[j].AltQnh;
             MinPreStartAltTime := Pilots[i].Fixes[j].TSec;
           end;
-          if  Pilots[i].Fixes[j].AltQnh < PreStartAltLimit then 
+          while (Pilots[i].Fixes[j].TSec <= Pilots[i].start) and (j < NbrFixes) and not(PreStartLimitOK) do 
           begin
-            PreStartLimitOK := TRUE;
+            if Pilots[i].Fixes[j].AltQnh < MinPreStartAlt then 
+            begin
+              MinPreStartAlt := Pilots[i].Fixes[j].AltQnh;
+              MinPreStartAltTime := Pilots[i].Fixes[j].TSec;
+            end;
+            if  Pilots[i].Fixes[j].AltQnh < PreStartAltLimit then 
+            begin
+              PreStartLimitOK := TRUE;
+            end;
+            j:=j+1
           end;
-          j:=j+1
-        end;
-        if not(PreStartLimitOK) then 
-        begin
-          if Pilots[i].Warning <> '' then Pilots[i].Warning := Pilots[i].Warning + #10;
-          Pilots[i].warning := Pilots[i].warning + 'Invalid PreStart Alt: ' + FloatToStr(round(MinPreStartAlt)) ;
-          Pilots[i].warning := Pilots[i].warning + 'm at time: '  + GetTimestring(MinPreStartAltTime);
+          if not(PreStartLimitOK) then 
+          begin
+            if Pilots[i].Warning <> '' then Pilots[i].Warning := Pilots[i].Warning + #10;
+            Pilots[i].warning := Pilots[i].warning + 'Invalid PreStart Alt: ' + FloatToStr(round(MinPreStartAlt)) ;
+            Pilots[i].warning := Pilots[i].warning + 'm at time: '  + GetTimestring(MinPreStartAltTime);
+          end;
         end;
       end; 
     end;
@@ -544,17 +607,16 @@ begin
   // simple handicap Checksum - adler32
   if Auto_Hcaps_on = true then
   begin
+    showmessage('Starting handicap stuff');
     AVal := 1;
     BVal := 0;
     for i:=0 to GetArrayLength(Pilots)-1 do
+      showmessage('pilot ' + inttostr(i) + ' handicap ' + Pilots[i].Hcap);
       AVal := AVal + Pilots[i].Hcap * 10000;
       BVal := BVal + AVal;
+      showmessage('AVal ' + floattostr(BVal) + ' BVal ' + floattostr(BVal));
     end;
-    AVal := AVal mod ModPrime;
-    BVal := BVal mod ModPrime;
-    Word1 := DEC2HEX(round(BVal));
-    Word2 := DEC2HEX(round(AVal));
-    Info4 := Info4 + ', ' + Task.ClassID + ' HCAP=' + Word1 + Word2;
+    Info4 := Info4 + ', ' + Task.ClassID + ' HCAP=' + Int2Hex((BVal * 65536) + AVal);
   end;
 
   // altitude less than minimum altitude
