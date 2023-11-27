@@ -1,4 +1,4 @@
-Program IGC_Annex_A_scoring_WGC2023v2_049;
+Program IGC_Annex_A_scoring_WGC2023v3;
 // Collaborate on writing scripts at Github:
 // https://github.com/naviter/seeyou_competition_scripts/
 //
@@ -11,6 +11,7 @@ Program IGC_Annex_A_scoring_WGC2023v2_049;
 //   . fix calculation of n3 to only count actual finishers.
 //   . include newline between user warnings to improve readability
 //
+
 // Version 9.03, Date 19.04.2023 by Andrej Kolar
 //   . Renamed Vo to V0 for consistency with T0 and D0
 // Version 9.02, Date 17.07.2022 by Andrej Kolar
@@ -102,61 +103,64 @@ var
  
 
 Function Int2HexDigit(FourBitInt : integer) : string;
+var outchar : string;
 begin
-  showmessage('starting int2hexdigit');
-  if FourBitInt < 10 then Int2HexDigit := IntToStr(FourBitInt);
-  if FourBitInt = 10 then Int2HexDigit = 'A';
-  if FourBitInt = 11 then Int2HexDigit = 'B';
-  if FourBitInt = 12 then Int2HexDigit = 'C';
-  if FourBitInt = 13 then Int2HexDigit = 'D';
-  if FourBitInt = 14 then Int2HexDigit = 'E';
-  if FourBitInt = 15 then Int2HexDigit = 'F';
-  showmessage('converted ' + inttostr(FourBitInt));
+  if FourBitInt < 10 then outchar := IntToStr(FourBitInt);
+  if FourBitInt = 10 then outchar := 'A';
+  if FourBitInt = 11 then outchar := 'B';
+  if FourBitInt = 12 then outchar := 'C';
+  if FourBitInt = 13 then outchar := 'D';
+  if FourBitInt = 14 then outchar := 'E';
+  if FourBitInt = 15 then outchar := 'F';
+  showmessage('converted ' + inttostr(FourBitInt) + ' to ' + outchar);
+  Int2HexDigit := outchar;
+
 end;
 
-Function Int2Hex(input : double) : string;
+Function Int2Hex(InInt : double) : string;
 var
 Target: double;
 OutputValue : string;
 begin
-    
-    showmessage('1-' + floattostr(input));
-    Target := input / 268435456;
-    OutputValue := Int2HexDigit(round(Target));
-    Target := (Target - round(Target)) * 268435456;
+  
+    showmessage('Converting=>' + floattostr(InInt));
+    Target := InInt / 268435456;
 
-    showmessage('2');
+    OutputValue := Int2HexDigit(trunc(Target));
+    Target := (Target - trunc(Target)) * 268435456;
+
+    showmessage('outputValue=>' + OutputValue);
     Target := Target / 16777216;
-    OutputValue := OutputValue + Int2Hex(round(Target));
-    Target := (Target - round(Target)) * 16777216;
+    OutputValue := OutputValue + Int2Hex(trunc(Target));
+    Target := (Target - trunc(Target)) * 16777216;
 
     showmessage('3');
     Target := Target / 1048576;
-    OutputValue := OutputValue + Int2Hex(round(Target));
-    Target := (Target - round(Target)) * 1048576;
+    OutputValue := OutputValue + Int2Hex(trunc(Target));
+    Target := (Target - trunc(Target)) * 1048576;
 
     showmessage('4');
     Target := Target / 65536;
-    OutputValue := OutputValue + Int2Hex(round(Target));
-    Target := (Target - round(Target)) * 65536;
+    OutputValue := OutputValue + Int2Hex(trunc(Target));
+    Target := (Target - trunc(Target)) * 65536;
     
     showmessage('5');
     Target := Target / 4096;
-    OutputValue := OutputValue + Int2Hex(round(Target));
-    Target := (Target - round(Target)) * 4096;
+    OutputValue := OutputValue + Int2Hex(trunc(Target));
+    Target := (Target - trunc(Target)) * 4096;
     
     showmessage('6');
     Target := Target / 256;
-    OutputValue := OutputValue + Int2Hex(round(Target));
-    Target := (Target - round(Target)) * 256;
+    OutputValue := OutputValue + Int2Hex(trunc(Target));
+    Target := (Target - trunc(Target)) * 256;
 
     showmessage('7');
     Target := Target / 16;
-    OutputValue := OutputValue + Int2Hex(round(Target));
-    Target := (Target - round(Target)) * 16;
+    OutputValue := OutputValue + Int2Hex(trunc(Target));
+    Target := (Target - trunc(Target)) * 16;
 
     showmessage('8');
-    OutputValue := OutputValue + Int2Hex(round(Target));
+    OutputValue := OutputValue + Int2Hex(trunc(Target));
 
     Int2Hex := OutputValue;
     
@@ -215,7 +219,6 @@ end;
 
 //  Main Code
 begin
-
   // initial checks
   if GetArrayLength(Pilots) <= 1 then
     exit;
@@ -605,16 +608,16 @@ begin
   end;
 
   // simple handicap Checksum - adler32
-  if Auto_Hcaps_on = true then
+  //disabled 
+  //if Auto_Hcaps_on = true then
+  if 1 = 0 then 
   begin
-    showmessage('Starting handicap stuff');
     AVal := 1;
     BVal := 0;
     for i:=0 to GetArrayLength(Pilots)-1 do
-      showmessage('pilot ' + inttostr(i) + ' handicap ' + Pilots[i].Hcap);
+    begin
       AVal := AVal + Pilots[i].Hcap * 10000;
       BVal := BVal + AVal;
-      showmessage('AVal ' + floattostr(BVal) + ' BVal ' + floattostr(BVal));
     end;
     Info4 := Info4 + ', ' + Task.ClassID + ' HCAP=' + Int2Hex((BVal * 65536) + AVal);
   end;
