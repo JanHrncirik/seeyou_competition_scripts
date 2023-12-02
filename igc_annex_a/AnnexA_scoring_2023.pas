@@ -429,7 +429,7 @@ begin
 
         for j:=0 to GetArrayLength(Pilots[i].Markers)-1 do
         begin
-          Ignore_Pev:= ((Pilots[i].Markers[j].Tsec-LastPev<=PevStartTimeBuffer) and (Lastpev>0)) or (Pevcount=3); // TODO: Also ignore PEV if PEV time is greater than start time.
+          Ignore_Pev:= ((Pilots[i].Markers[j].Tsec-LastPev<=PevStartTimeBuffer) and (Lastpev>0)) or (Pevcount=3) or (Pilots[i].Markers[j].Tsec > Pilots[i].Start); 
           if Ignore_Pev Then
              begin
                if (ALLUserWrng>=1)Then PevWarning := PevWarning + ' (PEV ignored='+ GetTimestring(Pilots[i].Markers[j].Tsec) +'!), '
