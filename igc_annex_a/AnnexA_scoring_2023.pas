@@ -1,4 +1,4 @@
-Program IGC_Annex_A_scoring_WGC2023v3;
+Program IGC_Annex_A_scoring_WGC2023v3_1;
 // Collaborate on writing scripts at Github:
 // https://github.com/naviter/seeyou_competition_scripts/
 //
@@ -63,7 +63,6 @@ Program IGC_Annex_A_scoring_WGC2023v3;
 
 const UseHandicaps = 2;   // set to: 0 to disable handicapping, 1 to use handicaps, 2 is auto (handicaps only for club and multi-seat)
       PevStartTimeBuffer = 30; // PEV which is less than PevStartTimeBuffer seconds later than last PEV will be ignored and not counted
-      ModPrime = 65521;  // used for handicap checksum
    
 var
   Dm, D1,
