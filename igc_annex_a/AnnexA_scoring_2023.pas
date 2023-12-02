@@ -6,7 +6,6 @@ Program IGC_Annex_A_scoring_WGC2023v3;
 //   . Incorporate changes required for Annex A 2023 Edition and WGC 2023 Local Procedures
 //       . Support for 7.4.5b Starting Procedures - Pre-start altitude
 //       . enter "PreStartAlt=nnn" in DayTag where nnn is altitude in m
-//   . Checksum function for handicaps for appropriate classes displayed in results info. 
 //   . User warning for below minimum height above airfield elevation - copy Ian's from Australia Rules
 //   . fix calculation of n3 to only count actual finishers.
 //   . include newline between user warnings to improve readability
@@ -97,74 +96,6 @@ var
   BelowAltFound : boolean;
   FixDuration, LaunchAboveAltFix, LastFixTime, FGAboveAltFix, LowPointTsec : Integer;
   MinimumAlt, LowPoint : Double;
-
-  //Checksum function for handicapped classes
-  AVal, BVal : double;
- 
-
-Function Int2HexDigit(FourBitInt : integer) : string;
-var outchar : string;
-begin
-  if FourBitInt < 10 then outchar := IntToStr(FourBitInt);
-  if FourBitInt = 10 then outchar := 'A';
-  if FourBitInt = 11 then outchar := 'B';
-  if FourBitInt = 12 then outchar := 'C';
-  if FourBitInt = 13 then outchar := 'D';
-  if FourBitInt = 14 then outchar := 'E';
-  if FourBitInt = 15 then outchar := 'F';
-  showmessage('converted ' + inttostr(FourBitInt) + ' to ' + outchar);
-  Int2HexDigit := outchar;
-
-end;
-
-Function Int2Hex(InInt : double) : string;
-var
-Target: double;
-OutputValue : string;
-begin
-  
-    showmessage('Converting=>' + floattostr(InInt));
-    Target := InInt / 268435456;
-
-    OutputValue := Int2HexDigit(trunc(Target));
-    Target := (Target - trunc(Target)) * 268435456;
-
-    showmessage('outputValue=>' + OutputValue);
-    Target := Target / 16777216;
-    OutputValue := OutputValue + Int2Hex(trunc(Target));
-    Target := (Target - trunc(Target)) * 16777216;
-
-    showmessage('3');
-    Target := Target / 1048576;
-    OutputValue := OutputValue + Int2Hex(trunc(Target));
-    Target := (Target - trunc(Target)) * 1048576;
-
-    showmessage('4');
-    Target := Target / 65536;
-    OutputValue := OutputValue + Int2Hex(trunc(Target));
-    Target := (Target - trunc(Target)) * 65536;
-    
-    showmessage('5');
-    Target := Target / 4096;
-    OutputValue := OutputValue + Int2Hex(trunc(Target));
-    Target := (Target - trunc(Target)) * 4096;
-    
-    showmessage('6');
-    Target := Target / 256;
-    OutputValue := OutputValue + Int2Hex(trunc(Target));
-    Target := (Target - trunc(Target)) * 256;
-
-    showmessage('7');
-    Target := Target / 16;
-    OutputValue := OutputValue + Int2Hex(trunc(Target));
-    Target := (Target - trunc(Target)) * 16;
-
-    showmessage('8');
-    OutputValue := OutputValue + Int2Hex(trunc(Target));
-
-    Int2Hex := OutputValue;
-    
-end;
 
 Function MinValue( a,b,c : double ) : double;
 var m : double;
@@ -607,21 +538,6 @@ begin
     end;
   end;
 
-  // simple handicap Checksum - adler32
-  //disabled 
-  //if Auto_Hcaps_on = true then
-  if 1 = 0 then 
-  begin
-    AVal := 1;
-    BVal := 0;
-    for i:=0 to GetArrayLength(Pilots)-1 do
-    begin
-      AVal := AVal + Pilots[i].Hcap * 10000;
-      BVal := BVal + AVal;
-    end;
-    Info4 := Info4 + ', ' + Task.ClassID + ' HCAP=' + Int2Hex((BVal * 65536) + AVal);
-  end;
-
   // altitude less than minimum altitude
   if (MinimumAlt <> 0 )  then
   begin
@@ -715,6 +631,4 @@ begin
     // 
   end;
   
-
-
 end.
