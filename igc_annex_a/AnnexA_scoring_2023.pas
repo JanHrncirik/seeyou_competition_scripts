@@ -9,6 +9,7 @@ Program IGC_Annex_A_scoring_WGC2023v3_1;
 //   . User warning for below minimum height above airfield elevation - copy Ian's from Australia Rules
 //   . fix calculation of n3 to only count actual finishers.
 //   . include newline between user warnings to improve readability
+//   . ignore PEV markers after start
 //
 
 // Version 9.03, Date 19.04.2023 by Andrej Kolar
